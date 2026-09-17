@@ -32,13 +32,15 @@
             <div class="summary-line"><span>Subtotal</span><strong id="subtotal">R$ 0,00</strong></div>
             <div class="summary-line"><span>Desconto</span><strong id="discount-total">- R$ 0,00</strong></div>
             <div class="summary-total"><span>Total geral</span><strong id="grand-total">R$ 0,00</strong></div>
-            <button id="continue-sale" class="sale-button" type="button" disabled>Continuar venda</button>
+            <button id="continue-sale" class="sale-button" type="button" disabled>Finalizar venda</button>
           </div>
         </aside>
       </div>
     </main>
+    <div id="checkout-modal" class="checkout-backdrop" hidden><section class="checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkout-title"><button id="close-checkout" class="close-button" type="button" aria-label="Fechar checkout">×</button><p class="eyebrow">Última etapa</p><h2 id="checkout-title">Finalizar venda</h2><p class="checkout-total">Total da venda <strong id="checkout-total">R$ 0,00</strong></p><form id="checkout-form"><label for="payment-method">Forma de pagamento</label><select id="payment-method"><option value="DINHEIRO">Dinheiro</option><option value="PIX">PIX</option><option value="CARTAO_CREDITO">Cartão de crédito</option><option value="CARTAO_DEBITO">Cartão de débito</option></select><div id="cash-fields"><label for="amount-received">Valor recebido</label><div class="received-field"><span>R$</span><input id="amount-received" type="number" min="0" step="0.01" placeholder="0,00" /></div><p class="change-line"><span>Troco</span><strong id="change-value">R$ 0,00</strong></p></div><p id="checkout-feedback" class="checkout-feedback" role="alert"></p><button id="confirm-sale" class="sale-button" type="submit">Confirmar venda</button></form></section></div>
     <script src="../../services/authService.js"></script>
     <script src="../../services/produtosService.js"></script>
+    <script src="../../services/pedidosService.js"></script>
     <script src="./pdv.js"></script>
   </body>
 </html>

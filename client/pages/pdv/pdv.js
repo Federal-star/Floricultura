@@ -7,6 +7,14 @@
   const discountInput = document.querySelector('#discount');
   const clearCartButton = document.querySelector('#clear-cart');
   const continueButton = document.querySelector('#continue-sale');
+  const checkoutModal = document.querySelector('#checkout-modal');
+  const checkoutForm = document.querySelector('#checkout-form');
+  const paymentMethod = document.querySelector('#payment-method');
+  const cashFields = document.querySelector('#cash-fields');
+  const amountReceived = document.querySelector('#amount-received');
+  const changeValue = document.querySelector('#change-value');
+  const checkoutFeedback = document.querySelector('#checkout-feedback');
+  const confirmSaleButton = document.querySelector('#confirm-sale');
   const currency = (value) => Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const escapeHtml = (value) => String(value || '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
   let products = [];
@@ -24,6 +32,10 @@
 
   function persistCart() {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  }
+
+  function calculateSubtotal() {
+    return cart.reduce((total, item) => total + Number(item.precoVenda) * item.quantity, 0);
   }
 
   function stockLabel(quantity) {
@@ -52,7 +64,7 @@
       cartItems.innerHTML = cart.map((item) => `<article class="cart-item"><div class="cart-item-info"><strong>${escapeHtml(item.nome)}</strong><span>${currency(item.precoVenda)} cada</span></div><div class="cart-item-actions"><div class="quantity-control"><button data-decrease="${item.id}" type="button" aria-label="Diminuir quantidade">−</button><strong>${item.quantity}</strong><button data-increase="${item.id}" type="button" aria-label="Aumentar quantidade" ${item.quantity >= item.quantidadeEstoque ? 'disabled' : ''}>+</button></div><strong class="item-subtotal">${currency(Number(item.precoVenda) * item.quantity)}</strong><button class="remove-button" data-remove="${item.id}" type="button" aria-label="Remover item">×</button></div></article>`).join('');
     }
 
-    const subtotal = cart.reduce((total, item) => total + Number(item.precoVenda) * item.quantity, 0);
+    const subtotal = calculateSubtotal();
     discount = Math.min(Math.max(discount, 0), subtotal);
     discountInput.value = discount.toFixed(2);
     document.querySelector('#subtotal').textContent = currency(subtotal);
@@ -60,7 +72,30 @@
     document.querySelector('#grand-total').textContent = currency(subtotal - discount);
     continueButton.disabled = cart.length === 0;
     clearCartButton.disabled = cart.length === 0;
+    document.querySelector('#checkout-total').textContent = currency(subtotal - discount);
     persistCart();
+  }
+
+  function updateCashFields() {
+    const isCash = paymentMethod.value === 'DINHEIRO';
+    cashFields.hidden = !isCash;
+    if (!isCash) return;
+    const received = Number(amountReceived.value) || 0;
+    changeValue.textContent = currency(Math.max(received - (calculateSubtotal() - discount), 0));
+  }
+
+  function openCheckout() {
+    if (!cart.length) return;
+    checkoutFeedback.textContent = '';
+    paymentMethod.value = 'DINHEIRO';
+    amountReceived.value = '';
+    updateCashFields();
+    checkoutModal.hidden = false;
+    paymentMethod.focus();
+  }
+
+  function closeCheckout() {
+    checkoutModal.hidden = true;
   }
 
   function showFeedback(message, isError = false) {
@@ -109,7 +144,46 @@
   document.querySelector('#quick-search').addEventListener('input', filterProducts);
   discountInput.addEventListener('input', () => { discount = Number(discountInput.value) || 0; renderCart(); });
   clearCartButton.addEventListener('click', () => { cart = []; renderCart(); });
-  continueButton.addEventListener('click', () => showFeedback('Carrinho pronto para a próxima etapa da venda.'));
+  continueButton.addEventListener('click', openCheckout);
+  document.querySelector('#close-checkout').addEventListener('click', closeCheckout);
+  checkoutModal.addEventListener('click', (event) => { if (event.target === checkoutModal) closeCheckout(); });
+  paymentMethod.addEventListener('change', updateCashFields);
+  amountReceived.addEventListener('input', updateCashFields);
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeCheckout(); });
+
+  checkoutForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const total = calculateSubtotal() - discount;
+    const received = Number(amountReceived.value) || 0;
+    if (paymentMethod.value === 'DINHEIRO' && received < total) {
+      checkoutFeedback.textContent = `Valor recebido insuficiente. Faltam ${currency(total - received)}.`;
+      checkoutFeedback.className = 'checkout-feedback is-error';
+      return;
+    }
+
+    confirmSaleButton.disabled = true;
+    confirmSaleButton.textContent = 'Processando...';
+    checkoutFeedback.textContent = '';
+    try {
+      const pedido = await pedidosService.create({
+        items: cart.map((item) => ({ produtoId: item.id, quantidade: item.quantity })),
+        desconto: discount,
+        formaPagamento: paymentMethod.value
+      });
+      cart = [];
+      discount = 0;
+      persistCart();
+      closeCheckout();
+      await initialize();
+      showFeedback(`Venda finalizada com sucesso. Pedido ${pedido.id.slice(0, 8)}.`, false);
+    } catch (error) {
+      checkoutFeedback.textContent = error.message;
+      checkoutFeedback.className = 'checkout-feedback is-error';
+    } finally {
+      confirmSaleButton.disabled = false;
+      confirmSaleButton.textContent = 'Confirmar venda';
+    }
+  });
 
   async function initialize() {
     try {
