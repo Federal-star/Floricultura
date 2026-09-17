@@ -33,6 +33,14 @@ enum StatusPedido {
   CANCELADO
 }
 
+enum MotivoPerda {
+  DETERIORACAO
+  AVARIA
+  PRAGA
+  VALIDADE
+  OUTROS
+}
+
 model Usuario {
   id        String   @id @default(cuid())
   nome      String
@@ -41,6 +49,7 @@ model Usuario {
   ativo     Boolean  @default(true)
   role      Role     @default(VENDEDOR)
   pedidos   Pedido[]
+  perdas    Perda[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -59,6 +68,7 @@ model Produto {
   cuidados           String?
   ativo              Boolean          @default(true)
   itensPedido        ItemPedido[]
+  perdas             Perda[]
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 }
@@ -85,4 +95,16 @@ model ItemPedido {
   subtotal       Decimal  @db.Decimal(10, 2)
   pedido         Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
   produto        Produto  @relation(fields: [produtoId], references: [id])
+}
+
+model Perda {
+  id          String      @id @default(cuid())
+  produtoId   String
+  usuarioId   String
+  quantidade  Int
+  motivo      MotivoPerda
+  observacao  String?
+  produto     Produto     @relation(fields: [produtoId], references: [id])
+  usuario     Usuario     @relation(fields: [usuarioId], references: [id])
+  createdAt   DateTime    @default(now())
 }
