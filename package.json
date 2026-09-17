@@ -9,7 +9,9 @@
     "start": "node server/server.js",
     "prisma:generate": "npx prisma generate --schema server/prisma/schema.prisma",
     "migrate:dev": "npx prisma migrate dev --schema server/prisma/schema.prisma",
-    "migrate:deploy": "npx prisma migrate deploy --schema server/prisma/schema.prisma"
+    "migrate:deploy": "npx prisma migrate deploy --schema server/prisma/schema.prisma",
+    "seed": "node server/prisma/seed.js",
+    "test": "node --test server/middlewares/rbacMiddleware.test.js"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
@@ -20,6 +22,9 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0"
+  },
+  "prisma": {
+    "seed": "node server/prisma/seed.js"
   },
   "devDependencies": {
     "prisma": "^6.2.1"

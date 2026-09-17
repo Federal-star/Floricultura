@@ -25,7 +25,8 @@ async function login(email, senha) {
     {
       id: usuario.id,
       nome: usuario.nome,
-      email: usuario.email
+      email: usuario.email,
+      role: usuario.role
     },
     env.jwtSecret,
     { expiresIn: '8h' }
@@ -37,7 +38,8 @@ async function login(email, senha) {
       id: usuario.id,
       nome: usuario.nome,
       email: usuario.email,
-      ativo: usuario.ativo
+      ativo: usuario.ativo,
+      role: usuario.role
     }
   };
 }

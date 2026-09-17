@@ -28,6 +28,11 @@
     return localStorage.getItem(TOKEN_KEY);
   }
 
+  function getUser() {
+    const storedUser = localStorage.getItem(USER_KEY);
+    return storedUser ? JSON.parse(storedUser) : null;
+  }
+
   function logout() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -36,6 +41,7 @@
   window.authService = {
     login,
     getToken,
+    getUser,
     logout
   };
 })(window);
