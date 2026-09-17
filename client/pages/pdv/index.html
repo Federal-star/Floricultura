@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDV | Floricultura</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../../styles/pdv.css" />
+  </head>
+  <body>
+    <main class="pos-page">
+      <header class="pos-header">
+        <div><p class="eyebrow">Terminal de vendas</p><h1>Atendimento</h1><p class="page-intro">Selecione os produtos para montar o pedido.</p></div>
+        <span class="session-label">Venda em andamento</span>
+      </header>
+
+      <div class="pos-layout">
+        <section class="product-browser" aria-labelledby="products-title">
+          <div class="section-heading-row"><div><h2 id="products-title">Produtos disponíveis</h2><p id="products-count" class="section-meta"></p></div><div class="quick-search"><span aria-hidden="true">⌕</span><label class="sr-only" for="quick-search">Buscar produto</label><input id="quick-search" type="search" placeholder="Nome ou SKU" autocomplete="off" /></div></div>
+          <p id="product-feedback" class="feedback" role="status"></p>
+          <div id="product-grid" class="product-grid"></div>
+        </section>
+
+        <aside class="cart-panel" aria-labelledby="cart-title">
+          <div class="cart-header"><div><p class="eyebrow">Pedido atual</p><h2 id="cart-title">Carrinho</h2></div><button id="clear-cart" class="quiet-button" type="button">Esvaziar</button></div>
+          <div id="cart-items" class="cart-items"></div>
+          <div class="cart-summary">
+            <label for="discount">Desconto</label>
+            <div class="discount-field"><span>R$</span><input id="discount" type="number" min="0" step="0.01" value="0" /></div>
+            <div class="summary-line"><span>Subtotal</span><strong id="subtotal">R$ 0,00</strong></div>
+            <div class="summary-line"><span>Desconto</span><strong id="discount-total">- R$ 0,00</strong></div>
+            <div class="summary-total"><span>Total geral</span><strong id="grand-total">R$ 0,00</strong></div>
+            <button id="continue-sale" class="sale-button" type="button" disabled>Continuar venda</button>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <script src="../../services/authService.js"></script>
+    <script src="../../services/produtosService.js"></script>
+    <script src="./pdv.js"></script>
+  </body>
+</html>
