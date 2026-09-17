@@ -44,8 +44,9 @@ async function list(req, res, next) {
     const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
     const pageSize = Math.min(Math.max(Number.parseInt(req.query.pageSize, 10) || 10, 1), 100);
     const { categoria } = req.query;
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
     if (categoria && !produtoService.isValidCategory(categoria)) return res.status(400).json({ success: false, error: 'Categoria de produto inválida' });
-    return res.status(200).json({ success: true, data: await produtoService.list({ page, pageSize, categoria }) });
+    return res.status(200).json({ success: true, data: await produtoService.list({ page, pageSize, categoria, q }) });
   } catch (error) { return next(error); }
 }
 

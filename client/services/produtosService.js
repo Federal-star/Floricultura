@@ -16,7 +16,12 @@
   }
 
   window.produtosService = {
-    list: (page, pageSize, categoria) => request(`/produtos?page=${page}&pageSize=${pageSize}${categoria ? `&categoria=${categoria}` : ''}`),
+    list: (page, pageSize, categoria, q) => {
+      const params = new URLSearchParams({ page, pageSize });
+      if (categoria) params.set('categoria', categoria);
+      if (q) params.set('q', q);
+      return request(`/produtos?${params.toString()}`);
+    },
     detail: (id) => request(`/produtos/${id}`),
     create: (data) => request('/produtos', { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => request(`/produtos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),

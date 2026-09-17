@@ -29,9 +29,16 @@ function serializeProduto(produto) {
   };
 }
 
-async function list({ page, pageSize, categoria }) {
+async function list({ page, pageSize, categoria, q }) {
   const where = { ativo: true };
   if (categoria) where.categoria = categoria;
+  if (q) {
+    where.OR = [
+      { nome: { contains: q, mode: 'insensitive' } },
+      { sku: { contains: q, mode: 'insensitive' } },
+      { descricao: { contains: q, mode: 'insensitive' } }
+    ];
+  }
 
   const [items, total] = await prisma.$transaction([
     prisma.produto.findMany({
