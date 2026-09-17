@@ -13,6 +13,14 @@ enum Role {
   VENDEDOR
 }
 
+enum CategoriaProduto {
+  PLANTA
+  VASO
+  INSUMO
+  ARRANJO
+  OUTROS
+}
+
 model Usuario {
   id        String   @id @default(cuid())
   nome      String
@@ -22,4 +30,21 @@ model Usuario {
   role      Role     @default(VENDEDOR)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Produto {
+  id                 String           @id @default(cuid())
+  nome               String
+  sku                String           @unique
+  categoria          CategoriaProduto
+  precoVenda         Decimal          @db.Decimal(10, 2)
+  quantidadeEstoque  Int              @default(0)
+  descricao          String?
+  imagemUrl          String?
+  rega               String?
+  iluminacao         String?
+  cuidados           String?
+  ativo              Boolean          @default(true)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 }
