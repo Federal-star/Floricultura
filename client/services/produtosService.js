@@ -17,6 +17,7 @@
 
   window.produtosService = {
     list: (page, pageSize, categoria) => request(`/produtos?page=${page}&pageSize=${pageSize}${categoria ? `&categoria=${categoria}` : ''}`),
+    detail: (id) => request(`/produtos/${id}`),
     create: (data) => request('/produtos', { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => request(`/produtos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     remove: (id) => request(`/produtos/${id}`, { method: 'DELETE' })
