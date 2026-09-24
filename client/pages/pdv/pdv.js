@@ -17,6 +17,7 @@
   const confirmSaleButton = document.querySelector('#confirm-sale');
   const clienteSelect = document.querySelector('#clienteId');
   const receiptModal = document.querySelector('#modalComprovante');
+  const whatsappButton = document.querySelector('#btnEnviarWhatsapp');
   const botanicalModal = document.querySelector('#modalFichaBotanica');
   const catalogFilters = document.querySelector('.catalog-filters');
   const currency = (value) => Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -26,6 +27,7 @@
   let cart = loadCart();
   let discount = 0;
   let activeCatalogFilter = 'TODOS';
+  let pedidoAtualComprovante = null;
 
   async function carregarClientesSelect() {
     try {
@@ -169,6 +171,7 @@
   }
 
   function exibirComprovante(pedido) {
+    pedidoAtualComprovante = pedido;
     document.querySelector('#reciboId').textContent = pedido.id;
     document.querySelector('#reciboData').textContent = new Date(pedido.createdAt).toLocaleString('pt-BR');
     document.querySelector('#reciboAtendente').textContent = pedido.usuario?.nome || 'Atendente';
@@ -178,7 +181,31 @@
     document.querySelector('#reciboFormaPgto').textContent = pedido.formaPagamento;
     document.querySelector('#reciboTotal').textContent = currency(Number(pedido.valorTotal || 0));
     document.querySelector('#reciboTroco').textContent = currency(Number(pedido.troco || 0));
+    whatsappButton.hidden = !pedido.cliente?.telefone;
     receiptModal.hidden = false;
+  }
+
+  function enviarGuiaWhatsapp() {
+    if (!pedidoAtualComprovante?.cliente?.telefone) {
+      showFeedback('Este pedido não possui cliente com telefone cadastrado.', true);
+      return;
+    }
+
+    const { cliente, itens = [] } = pedidoAtualComprovante;
+    let telefone = String(cliente.telefone).replace(/\D/g, '');
+    if (!telefone.startsWith('55')) telefone = `55${telefone}`;
+    let mensagem = `Olá, *${cliente.nome}*!\n\nObrigado por comprar na *Floricultura*!\nAqui está o seu *Guia Prático de Cuidados*:\n\n`;
+    itens.forEach((item) => {
+      const produto = item.produto;
+      if (!produto) return;
+      mensagem += `🌿 *${produto.nome}*\n`;
+      mensagem += `💧 *Rega:* ${produto.rega || '1 a 2 vezes por semana'}\n`;
+      mensagem += `☀️ *Iluminação:* ${produto.iluminacao || 'Luz indireta'}\n`;
+      if (produto.usos) mensagem += `🌱 *Usos e benefícios:* ${produto.usos}\n`;
+      mensagem += '\n';
+    });
+    mensagem += 'Qualquer dúvida sobre o cultivo, estamos à disposição. Tenha um ótimo dia!';
+    window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank', 'noopener,noreferrer');
   }
 
   function fecharComprovante() {
@@ -241,6 +268,7 @@
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeCheckout(); });
   document.querySelector('#close-receipt').addEventListener('click', fecharComprovante);
   document.querySelector('#print-receipt').addEventListener('click', () => window.print());
+  whatsappButton.addEventListener('click', enviarGuiaWhatsapp);
   receiptModal.addEventListener('click', (event) => { if (event.target === receiptModal) fecharComprovante(); });
   document.querySelector('#close-botanical').addEventListener('click', closeBotanicalSheet);
   botanicalModal.addEventListener('click', (event) => { if (event.target === botanicalModal) closeBotanicalSheet(); });
