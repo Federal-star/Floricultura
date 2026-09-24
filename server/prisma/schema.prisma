@@ -84,11 +84,15 @@ model Produto {
   categoria          CategoriaProduto
   precoVenda         Decimal          @db.Decimal(10, 2)
   quantidadeEstoque  Int              @default(0)
+  popular            Boolean          @default(false)
   descricao          String?
   imagemUrl          String?
   rega               String?
   iluminacao         String?
   cuidados           String?
+  usos               String?
+  argumentosVenda    String?
+  sugestoesIds       String?
   ativo              Boolean          @default(true)
   itensPedido        ItemPedido[]
   perdas             Perda[]

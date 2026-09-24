@@ -8,11 +8,15 @@ const publicFields = {
   categoria: true,
   precoVenda: true,
   quantidadeEstoque: true,
+  popular: true,
   descricao: true,
   imagemUrl: true,
   rega: true,
   iluminacao: true,
   cuidados: true,
+  usos: true,
+  argumentosVenda: true,
+  sugestoesIds: true,
   ativo: true,
   createdAt: true,
   updatedAt: true
@@ -29,9 +33,10 @@ function serializeProduto(produto) {
   };
 }
 
-async function list({ page, pageSize, categoria, q }) {
+async function list({ page, pageSize, categoria, q, popular }) {
   const where = { ativo: true };
   if (categoria) where.categoria = categoria;
+  if (popular === true) where.popular = true;
   if (q) {
     where.OR = [
       { nome: { contains: q, mode: 'insensitive' } },

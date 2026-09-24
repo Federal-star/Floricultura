@@ -16,10 +16,11 @@
   }
 
   window.produtosService = {
-    list: (page, pageSize, categoria, q) => {
+    list: (page, pageSize, categoria, q, popular = false) => {
       const params = new URLSearchParams({ page, pageSize });
       if (categoria) params.set('categoria', categoria);
       if (q) params.set('q', q);
+      if (popular) params.set('popular', 'true');
       return request(`/produtos?${params.toString()}`);
     },
     detail: (id) => request(`/produtos/${id}`),

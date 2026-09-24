@@ -17,11 +17,15 @@
   const confirmSaleButton = document.querySelector('#confirm-sale');
   const clienteSelect = document.querySelector('#clienteId');
   const receiptModal = document.querySelector('#modalComprovante');
+  const botanicalModal = document.querySelector('#modalFichaBotanica');
+  const catalogFilters = document.querySelector('.catalog-filters');
   const currency = (value) => Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const escapeHtml = (value) => String(value || '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
   let products = [];
+  let catalogProducts = [];
   let cart = loadCart();
   let discount = 0;
+  let activeCatalogFilter = 'TODOS';
 
   async function carregarClientesSelect() {
     try {
@@ -65,12 +69,58 @@
 
   function renderProducts(filteredProducts) {
     productsCount.textContent = `${filteredProducts.length} ${filteredProducts.length === 1 ? 'item disponível' : 'itens disponíveis'}`;
-    productGrid.innerHTML = filteredProducts.map((product) => `<article class="product-card"><div class="product-image">${product.imagemUrl ? `<img src="${escapeHtml(product.imagemUrl)}" alt="" />` : '<span aria-hidden="true">✿</span>'}</div><div class="product-card-body"><span class="product-category">${escapeHtml(product.categoria)}</span><h3>${escapeHtml(product.nome)}</h3><p class="product-sku">${escapeHtml(product.sku)}</p><div class="product-card-footer"><div><strong>${currency(product.precoVenda)}</strong>${stockLabel(product.quantidadeEstoque)}</div><button class="add-button" data-add="${product.id}" type="button" aria-label="Adicionar ${escapeHtml(product.nome)}">+</button></div></div></article>`).join('') || '<div class="empty-products">Nenhum produto disponível para seleção.</div>';
+    productGrid.innerHTML = filteredProducts.map((product) => `<article class="product-card"><button class="product-details-button" data-details="${product.id}" type="button">Ficha botânica</button><div class="product-image">${product.imagemUrl ? `<img src="${escapeHtml(product.imagemUrl)}" alt="" />` : '<span aria-hidden="true">✿</span>'}</div><div class="product-card-body"><span class="product-category">${escapeHtml(product.categoria)}</span><h3>${escapeHtml(product.nome)}</h3><p class="product-sku">${escapeHtml(product.sku)}</p><div class="product-card-footer"><div><strong>${currency(product.precoVenda)}</strong>${stockLabel(product.quantidadeEstoque)}</div><button class="add-button" data-add="${product.id}" type="button" aria-label="Adicionar ${escapeHtml(product.nome)}">+</button></div></div></article>`).join('') || '<div class="empty-products">Nenhum produto disponível para seleção.</div>';
+  }
+
+  function filterCatalogProducts() {
+    const term = document.querySelector('#quick-search').value.trim().toLowerCase();
+    const filtered = catalogProducts.filter((product) => {
+      const matchesCategory = activeCatalogFilter === 'TODOS' || (activeCatalogFilter === 'PLANTAS' && product.categoria === 'PLANTA') || (activeCatalogFilter === 'INSUMOS' && ['INSUMO', 'VASO'].includes(product.categoria));
+      return matchesCategory && `${product.nome} ${product.sku}`.toLowerCase().includes(term);
+    });
+    products = filtered;
+    renderProducts(filtered);
+  }
+
+  async function setCatalogFilter(filter) {
+    activeCatalogFilter = filter;
+    document.querySelectorAll('[data-catalog-filter]').forEach((button) => button.classList.toggle('is-active', button.dataset.catalogFilter === filter));
+    try {
+      const result = await produtosService.list(1, 100, '', '', filter === 'POPULARES');
+      catalogProducts = result.items.filter((product) => product.quantidadeEstoque > 0 && product.ativo);
+      reconcileCart();
+      filterCatalogProducts();
+    } catch (error) {
+      showFeedback(error.message, true);
+    }
+  }
+
+  function openBotanicalSheet(id) {
+    const product = catalogProducts.find((entry) => entry.id === id);
+    if (!product) return;
+    document.querySelector('#fbNome').textContent = product.nome;
+    document.querySelector('#fbSku').textContent = product.sku;
+    document.querySelector('#fbPreco').textContent = currency(product.precoVenda);
+    document.querySelector('#fbRega').textContent = product.rega || 'Não informada';
+    document.querySelector('#fbIluminacao').textContent = product.iluminacao || 'Não informada';
+    document.querySelector('#fbUsos').textContent = product.usos || 'Não informado';
+    document.querySelector('#fbArgumentos').textContent = product.argumentosVenda || 'Planta de alta durabilidade e excelente opção para presente.';
+
+    const suggestedIds = (product.sugestoesIds || '').split(',').map((suggestionId) => suggestionId.trim()).filter(Boolean);
+    const suggested = suggestedIds.map((suggestionId) => catalogProducts.find((entry) => entry.id === suggestionId)).filter(Boolean);
+    const fallback = catalogProducts.filter((entry) => entry.id !== product.id && ['INSUMO', 'VASO'].includes(entry.categoria));
+    const suggestions = [...suggested, ...fallback.filter((entry) => !suggested.some((item) => item.id === entry.id))].slice(0, 3);
+    document.querySelector('#containerVendaCasada').innerHTML = suggestions.map((suggestion) => `<article class="suggestion-card"><strong>${escapeHtml(suggestion.nome)}</strong><span>${currency(suggestion.precoVenda)}</span><button class="suggestion-add-button" data-suggestion-add="${suggestion.id}" type="button">Adicionar</button></article>`).join('') || '<p class="empty-suggestions">Nenhum item sugerido disponível.</p>';
+    botanicalModal.hidden = false;
+  }
+
+  function closeBotanicalSheet() {
+    botanicalModal.hidden = true;
   }
 
   function reconcileCart() {
     cart = cart.map((item) => {
-      const product = products.find((entry) => entry.id === item.id);
+      const product = catalogProducts.find((entry) => entry.id === item.id);
       if (!product || product.quantidadeEstoque <= 0) return null;
       return { ...product, quantity: Math.min(item.quantity, product.quantidadeEstoque) };
     }).filter(Boolean);
@@ -142,7 +192,7 @@
   }
 
   function addToCart(id) {
-    const product = products.find((entry) => entry.id === id);
+    const product = catalogProducts.find((entry) => entry.id === id);
     if (!product) return;
     const item = cart.find((entry) => entry.id === id);
     if (item && item.quantity >= product.quantidadeEstoque) {
@@ -167,12 +217,14 @@
     renderCart();
   }
 
-  function filterProducts() {
-    const term = document.querySelector('#quick-search').value.trim().toLowerCase();
-    renderProducts(products.filter((product) => `${product.nome} ${product.sku}`.toLowerCase().includes(term)));
-  }
+  function filterProducts() { filterCatalogProducts(); }
 
-  productGrid.addEventListener('click', (event) => { if (event.target.dataset.add) addToCart(event.target.dataset.add); });
+  productGrid.addEventListener('click', (event) => {
+    if (event.target.dataset.add) addToCart(event.target.dataset.add);
+    if (event.target.dataset.details) openBotanicalSheet(event.target.dataset.details);
+  });
+  document.querySelector('#containerVendaCasada').addEventListener('click', (event) => { if (event.target.dataset.suggestionAdd) addToCart(event.target.dataset.suggestionAdd); });
+  catalogFilters.addEventListener('click', (event) => { if (event.target.dataset.catalogFilter) setCatalogFilter(event.target.dataset.catalogFilter); });
   cartItems.addEventListener('click', (event) => {
     if (event.target.dataset.increase) updateQuantity(event.target.dataset.increase, 1);
     if (event.target.dataset.decrease) updateQuantity(event.target.dataset.decrease, -1);
@@ -190,6 +242,8 @@
   document.querySelector('#close-receipt').addEventListener('click', fecharComprovante);
   document.querySelector('#print-receipt').addEventListener('click', () => window.print());
   receiptModal.addEventListener('click', (event) => { if (event.target === receiptModal) fecharComprovante(); });
+  document.querySelector('#close-botanical').addEventListener('click', closeBotanicalSheet);
+  botanicalModal.addEventListener('click', (event) => { if (event.target === botanicalModal) closeBotanicalSheet(); });
 
   checkoutForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -231,9 +285,10 @@
   async function initialize() {
     try {
       const result = await produtosService.list(1, 100, '', '');
-      products = result.items.filter((product) => product.quantidadeEstoque > 0 && product.ativo);
+      catalogProducts = result.items.filter((product) => product.quantidadeEstoque > 0 && product.ativo);
+      products = catalogProducts;
       reconcileCart();
-      renderProducts(products);
+      filterCatalogProducts();
       renderCart();
     } catch (error) {
       productFeedback.textContent = error.message;

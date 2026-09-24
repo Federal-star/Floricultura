@@ -24,10 +24,13 @@ async function main() {
       categoria: 'PLANTA',
       precoVenda: '89.90',
       quantidadeEstoque: 12,
+      popular: true,
       descricao: 'Orquídea elegante para ambientes internos.',
       rega: '2x por semana',
       iluminacao: 'Meia-sombra',
-      cuidados: 'Evitar água acumulada no centro das folhas.'
+      cuidados: 'Evitar água acumulada no centro das folhas.',
+      usos: 'Ornamental e decoração de interiores',
+      argumentosVenda: 'Elegante, durável e uma excelente opção para presentear.'
     },
     {
       sku: 'VAS-CER-001',
@@ -35,6 +38,7 @@ async function main() {
       categoria: 'VASO',
       precoVenda: '54.90',
       quantidadeEstoque: 18,
+      popular: false,
       descricao: 'Vaso artesanal em cerâmica esmaltada.'
     },
     {
@@ -43,6 +47,7 @@ async function main() {
       categoria: 'INSUMO',
       precoVenda: '24.90',
       quantidadeEstoque: 0,
+      popular: false,
       descricao: 'Adubo orgânico para nutrição de plantas.'
     }
   ];
