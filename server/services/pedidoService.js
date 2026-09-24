@@ -31,20 +31,24 @@ function serializePedido(pedido) {
     ...pedido,
     valorTotal: pedido.valorTotal.toString(),
     desconto: pedido.desconto.toString(),
+    troco: pedido.troco.toString(),
     itens: pedido.itens.map((item) => ({
       ...item,
       precoUnitario: item.precoUnitario.toString(),
-      subtotal: item.subtotal.toString()
+      subtotal: item.subtotal.toString(),
+      produto: item.produto
     }))
   };
 }
 
-async function create({ usuarioId, items, desconto = 0, formaPagamento }) {
+async function create({ usuarioId, clienteId, items, desconto = 0, troco = 0, formaPagamento }) {
   if (!Array.isArray(items) || items.length === 0) throw new PedidoValidationError('O pedido deve conter ao menos um item');
   if (!FORMAS_PAGAMENTO.includes(formaPagamento)) throw new PedidoValidationError('Forma de pagamento inválida');
 
   const descontoDecimal = new Prisma.Decimal(desconto);
+  const trocoDecimal = new Prisma.Decimal(troco);
   if (descontoDecimal.isNegative()) throw new PedidoValidationError('O desconto não pode ser negativo');
+  if (trocoDecimal.isNegative()) throw new PedidoValidationError('O troco não pode ser negativo');
 
   const normalizedItems = normalizeItems(items);
 
@@ -84,13 +88,19 @@ async function create({ usuarioId, items, desconto = 0, formaPagamento }) {
     return tx.pedido.create({
       data: {
         usuarioId,
+        clienteId: clienteId || null,
         valorTotal,
         desconto: descontoDecimal,
+        troco: trocoDecimal,
         formaPagamento,
         status: 'CONCLUIDO',
         itens: { create: itemRows }
       },
-      include: { itens: true }
+      include: {
+        itens: { include: { produto: true } },
+        cliente: true,
+        usuario: true
+      }
     });
   });
 

@@ -11,7 +11,7 @@
       body: JSON.stringify(data)
     });
     const payload = await response.json();
-    if (!response.ok || !payload.success) throw new Error(payload.error || 'Não foi possível finalizar a venda.');
+    if (!response.ok || !payload.success) throw new Error(payload.error || payload.message || 'Não foi possível finalizar a venda.');
     return payload.data;
   }
 

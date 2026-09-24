@@ -2,11 +2,13 @@ const pedidoService = require('../services/pedidoService');
 
 async function create(req, res, next) {
   try {
-    const { items, desconto, formaPagamento } = req.body;
+    const { clienteId, items, desconto, troco, formaPagamento } = req.body;
     const data = await pedidoService.create({
       usuarioId: req.user.id,
+      clienteId,
       items,
       desconto,
+      troco,
       formaPagamento
     });
 

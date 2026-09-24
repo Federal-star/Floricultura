@@ -15,11 +15,31 @@
   const changeValue = document.querySelector('#change-value');
   const checkoutFeedback = document.querySelector('#checkout-feedback');
   const confirmSaleButton = document.querySelector('#confirm-sale');
+  const clienteSelect = document.querySelector('#clienteId');
+  const receiptModal = document.querySelector('#modalComprovante');
   const currency = (value) => Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const escapeHtml = (value) => String(value || '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
   let products = [];
   let cart = loadCart();
   let discount = 0;
+
+  async function carregarClientesSelect() {
+    try {
+      const response = await fetch('/api/v1/clientes', { headers: { Authorization: `Bearer ${authService.getToken()}` } });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.error || 'Não foi possível carregar os clientes.');
+      clienteSelect.innerHTML = '<option value="">Consumidor Final (Não identificado)</option>';
+      (payload.data || []).forEach((cliente) => {
+        const option = document.createElement('option');
+        option.value = cliente.id;
+        option.textContent = `${cliente.nome}${cliente.cpfCnpj ? ` (${cliente.cpfCnpj})` : ''}`;
+        clienteSelect.appendChild(option);
+      });
+    } catch (error) {
+      checkoutFeedback.textContent = error.message;
+      checkoutFeedback.className = 'checkout-feedback is-error';
+    }
+  }
 
   function loadCart() {
     try {
@@ -98,6 +118,23 @@
     checkoutModal.hidden = true;
   }
 
+  function exibirComprovante(pedido) {
+    document.querySelector('#reciboId').textContent = pedido.id;
+    document.querySelector('#reciboData').textContent = new Date(pedido.createdAt).toLocaleString('pt-BR');
+    document.querySelector('#reciboAtendente').textContent = pedido.usuario?.nome || 'Atendente';
+    document.querySelector('#reciboCliente').textContent = pedido.cliente ? `${pedido.cliente.nome}${pedido.cliente.cpfCnpj ? ` (${pedido.cliente.cpfCnpj})` : ''}` : 'Consumidor Final';
+    document.querySelector('#reciboItensList').innerHTML = (pedido.itens || []).map((item) => `<li>${item.quantidade}x ${escapeHtml(item.produto?.nome || 'Produto')} - ${currency(Number(item.subtotal || Number(item.precoUnitario) * item.quantidade))}</li>`).join('');
+    document.querySelector('#reciboDesconto').textContent = currency(Number(pedido.desconto || 0));
+    document.querySelector('#reciboFormaPgto').textContent = pedido.formaPagamento;
+    document.querySelector('#reciboTotal').textContent = currency(Number(pedido.valorTotal || 0));
+    document.querySelector('#reciboTroco').textContent = currency(Number(pedido.troco || 0));
+    receiptModal.hidden = false;
+  }
+
+  function fecharComprovante() {
+    receiptModal.hidden = true;
+  }
+
   function showFeedback(message, isError = false) {
     productFeedback.textContent = message;
     productFeedback.className = isError ? 'feedback is-error' : 'feedback';
@@ -150,6 +187,9 @@
   paymentMethod.addEventListener('change', updateCashFields);
   amountReceived.addEventListener('input', updateCashFields);
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeCheckout(); });
+  document.querySelector('#close-receipt').addEventListener('click', fecharComprovante);
+  document.querySelector('#print-receipt').addEventListener('click', () => window.print());
+  receiptModal.addEventListener('click', (event) => { if (event.target === receiptModal) fecharComprovante(); });
 
   checkoutForm.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -166,15 +206,18 @@
     checkoutFeedback.textContent = '';
     try {
       const pedido = await pedidosService.create({
+        clienteId: clienteSelect.value || null,
         items: cart.map((item) => ({ produtoId: item.id, quantidade: item.quantity })),
         desconto: discount,
-        formaPagamento: paymentMethod.value
+        formaPagamento: paymentMethod.value,
+        troco: paymentMethod.value === 'DINHEIRO' ? Math.max(received - total, 0) : 0
       });
       cart = [];
       discount = 0;
       persistCart();
       closeCheckout();
       await initialize();
+      exibirComprovante(pedido);
       showFeedback(`Venda finalizada com sucesso. Pedido ${pedido.id.slice(0, 8)}.`, false);
     } catch (error) {
       checkoutFeedback.textContent = error.message;
@@ -198,5 +241,5 @@
     }
   }
 
-  initialize();
+  Promise.all([initialize(), carregarClientesSelect()]);
 })();

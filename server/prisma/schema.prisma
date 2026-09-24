@@ -93,6 +93,7 @@ model Pedido {
   clienteId       String?
   valorTotal      Decimal        @db.Decimal(10, 2)
   desconto        Decimal        @default(0) @db.Decimal(10, 2)
+  troco           Decimal        @default(0) @db.Decimal(10, 2)
   formaPagamento  FormaPagamento
   status          StatusPedido   @default(CONCLUIDO)
   usuario         Usuario        @relation(fields: [usuarioId], references: [id])
