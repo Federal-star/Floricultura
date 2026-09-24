@@ -41,6 +41,14 @@ enum MotivoPerda {
   OUTROS
 }
 
+enum StatusEntrega {
+  PENDENTE
+  EM_PREPARACAO
+  SAIU_PARA_ENTREGA
+  ENTREGUE
+  CANCELADO
+}
+
 model Usuario {
   id        String   @id @default(cuid())
   nome      String
@@ -62,6 +70,7 @@ model Cliente {
   telefone  String?
   endereco  String?
   pedidos   Pedido[]
+  entregas  Entrega[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -98,6 +107,7 @@ model Pedido {
   status          StatusPedido   @default(CONCLUIDO)
   usuario         Usuario        @relation(fields: [usuarioId], references: [id])
   cliente         Cliente?       @relation(fields: [clienteId], references: [id])
+  entrega         Entrega?
   itens           ItemPedido[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -124,4 +134,21 @@ model Perda {
   produto     Produto     @relation(fields: [produtoId], references: [id])
   usuario     Usuario     @relation(fields: [usuarioId], references: [id])
   createdAt   DateTime    @default(now())
+}
+
+model Entrega {
+  id             String        @id @default(uuid())
+  pedidoId       String?       @unique @db.Uuid
+  pedido         Pedido?       @relation(fields: [pedidoId], references: [id])
+  clienteId      String
+  cliente        Cliente       @relation(fields: [clienteId], references: [id])
+  dataEntrega    DateTime
+  horarioEntrega String
+  endereco       String
+  observacao     String?
+  status         StatusEntrega @default(PENDENTE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("entregas")
 }
