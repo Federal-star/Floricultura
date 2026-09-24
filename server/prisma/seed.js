@@ -7,11 +7,12 @@ async function main() {
 
   await prisma.usuario.upsert({
     where: { email: 'admin@floricultura.com' },
-    update: { nome: 'Administrador', role: 'ADMIN', ativo: true },
+    update: { nome: 'Administrador', senha, role: 'ADMIN', ativo: true },
     create: {
       nome: 'Administrador',
       email: 'admin@floricultura.com',
-      senha,
+      senha, // Senha padrão: Flor@1234
+      ativo: true,
       role: 'ADMIN'
     }
   });

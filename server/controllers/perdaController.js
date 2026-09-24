@@ -3,7 +3,10 @@ const perdaService = require('../services/perdaService');
 async function create(req, res, next) {
   try {
     const { produtoId, quantidade, motivo, observacao } = req.body;
-    const data = await perdaService.create({ produtoId, usuarioId: req.user.id, quantidade, motivo, observacao });
+    if (!produtoId || !quantidade || !motivo) {
+      return res.status(400).json({ success: false, error: 'Produto, quantidade e motivo são obrigatórios.' });
+    }
+    const data = await perdaService.create({ produtoId, usuarioId: req.user.id, quantidade: Number(quantidade), motivo, observacao });
     return res.status(201).json({ success: true, data });
   } catch (error) {
     if (error instanceof perdaService.PerdaValidationError) return res.status(400).json({ success: false, error: error.message });

@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -20,6 +21,15 @@ app.get('/api/v1', (req, res) => {
     success: true,
     status: 'online'
   });
+});
+
+// Servir a pasta 'client' na raiz e sob o prefixo /client
+app.use(express.static(path.join(__dirname, '../client')));
+app.use('/client', express.static(path.join(__dirname, '../client')));
+
+// Rota raiz redireciona para a tela de login
+app.get('/', (req, res) => {
+  res.redirect('/client/pages/login/index.html');
 });
 
 app.use('/api/v1', apiRoutes);
