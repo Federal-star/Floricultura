@@ -54,6 +54,20 @@ model Usuario {
   updatedAt DateTime @updatedAt
 }
 
+model Cliente {
+  id        String   @id @default(uuid())
+  nome      String
+  cpfCnpj   String?  @unique
+  email     String?
+  telefone  String?
+  endereco  String?
+  pedidos   Pedido[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("clientes")
+}
+
 model Produto {
   id                 String           @id @default(cuid())
   nome               String
@@ -76,11 +90,13 @@ model Produto {
 model Pedido {
   id              String         @id @default(uuid()) @db.Uuid
   usuarioId       String
+  clienteId       String?
   valorTotal      Decimal        @db.Decimal(10, 2)
   desconto        Decimal        @default(0) @db.Decimal(10, 2)
   formaPagamento  FormaPagamento
   status          StatusPedido   @default(CONCLUIDO)
   usuario         Usuario        @relation(fields: [usuarioId], references: [id])
+  cliente         Cliente?       @relation(fields: [clienteId], references: [id])
   itens           ItemPedido[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
