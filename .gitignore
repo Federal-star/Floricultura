@@ -1,5 +1,6 @@
 node_modules
 .env
+.env*.local
 server/node_modules
 client/node_modules
 dist
@@ -7,3 +8,4 @@ coverage
 *.log
 server/prisma/dev.db
 server/prisma/dev.db-journal
+.vercel
