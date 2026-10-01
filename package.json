@@ -1,5 +1,5 @@
 {
-  "name": "floricultura",
+  "name": "floraerp",
   "version": "0.1.0",
   "private": true,
   "description": "Sistema de gestão para floricultura",
@@ -11,7 +11,7 @@
     "migrate:dev": "npx prisma migrate dev --schema server/prisma/schema.prisma",
     "migrate:deploy": "npx prisma migrate deploy --schema server/prisma/schema.prisma",
     "seed": "node server/prisma/seed.js",
-    "test": "node --test server/middlewares/rbacMiddleware.test.js"
+    "test": "node --test \"server/**/*.test.js\" \"client/services/*.test.js\""
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
