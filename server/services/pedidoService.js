@@ -99,7 +99,7 @@ async function create({ usuarioId, clienteId, items, desconto = 0, troco = 0, fo
       include: {
         itens: { include: { produto: true } },
         cliente: true,
-        usuario: true
+        usuario: { select: { id: true, nome: true } }
       }
     });
   });
