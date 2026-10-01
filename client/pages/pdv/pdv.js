@@ -20,8 +20,7 @@
   const whatsappButton = document.querySelector('#btnEnviarWhatsapp');
   const botanicalModal = document.querySelector('#modalFichaBotanica');
   const catalogFilters = document.querySelector('.catalog-filters');
-  const currency = (value) => Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const escapeHtml = (value) => String(value || '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+  const { escapeHtml, formatCurrency: currency, normalizeWhatsappPhone, buildCareGuideMessage } = window.floriculturaUtils;
   let products = [];
   let catalogProducts = [];
   let cart = loadCart();
@@ -105,6 +104,7 @@
     document.querySelector('#fbPreco').textContent = currency(product.precoVenda);
     document.querySelector('#fbRega').textContent = product.rega || 'Não informada';
     document.querySelector('#fbIluminacao').textContent = product.iluminacao || 'Não informada';
+    document.querySelector('#fbCuidados').textContent = product.cuidados || 'Não informado';
     document.querySelector('#fbUsos').textContent = product.usos || 'Não informado';
     document.querySelector('#fbArgumentos').textContent = product.argumentosVenda || 'Planta de alta durabilidade e excelente opção para presente.';
 
@@ -192,19 +192,12 @@
     }
 
     const { cliente, itens = [] } = pedidoAtualComprovante;
-    let telefone = String(cliente.telefone).replace(/\D/g, '');
-    if (!telefone.startsWith('55')) telefone = `55${telefone}`;
-    let mensagem = `Olá, *${cliente.nome}*!\n\nObrigado por comprar na *Floricultura*!\nAqui está o seu *Guia Prático de Cuidados*:\n\n`;
-    itens.forEach((item) => {
-      const produto = item.produto;
-      if (!produto) return;
-      mensagem += `🌿 *${produto.nome}*\n`;
-      mensagem += `💧 *Rega:* ${produto.rega || '1 a 2 vezes por semana'}\n`;
-      mensagem += `☀️ *Iluminação:* ${produto.iluminacao || 'Luz indireta'}\n`;
-      if (produto.usos) mensagem += `🌱 *Usos e benefícios:* ${produto.usos}\n`;
-      mensagem += '\n';
-    });
-    mensagem += 'Qualquer dúvida sobre o cultivo, estamos à disposição. Tenha um ótimo dia!';
+    const telefone = normalizeWhatsappPhone(cliente.telefone);
+    if (!telefone) {
+      showFeedback('O telefone do cliente é inválido para WhatsApp.', true);
+      return;
+    }
+    const mensagem = buildCareGuideMessage(cliente, itens);
     window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`, '_blank', 'noopener,noreferrer');
   }
 
