@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "description": "Sistema de gestão para floricultura",
-  "main": "server/server.js",
+  "main": "server.js",
   "scripts": {
     "dev": "node server/server.js",
     "start": "node server/server.js",
-    "prisma:generate": "npx prisma generate --schema server/prisma/schema.prisma",
-    "migrate:dev": "npx prisma migrate dev --schema server/prisma/schema.prisma",
-    "migrate:deploy": "npx prisma migrate deploy --schema server/prisma/schema.prisma",
+    "build": "prisma generate --schema server/prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema server/prisma/schema.prisma",
+    "migrate:dev": "prisma migrate dev --schema server/prisma/schema.prisma",
+    "migrate:deploy": "prisma migrate deploy --schema server/prisma/schema.prisma",
     "seed": "node server/prisma/seed.js",
     "test": "node --test \"server/**/*.test.js\" \"client/services/*.test.js\""
   },
