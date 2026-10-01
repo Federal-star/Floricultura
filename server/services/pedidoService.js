@@ -11,6 +11,13 @@ class PedidoValidationError extends Error {
   }
 }
 
+class PedidoNotFoundError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 404;
+  }
+}
+
 function normalizeItems(items) {
   const quantities = new Map();
 
@@ -107,4 +114,39 @@ async function create({ usuarioId, clienteId, items, desconto = 0, troco = 0, fo
   return serializePedido(pedido);
 }
 
-module.exports = { FORMAS_PAGAMENTO, PedidoValidationError, create };
+async function cancel(id) {
+  const pedido = await prisma.$transaction(async (tx) => {
+    const lockedOrders = await tx.$queryRaw`
+      SELECT "id", "status"
+      FROM "Pedido"
+      WHERE "id" = ${id}
+      FOR UPDATE
+    `;
+    const lockedOrder = lockedOrders[0];
+    if (!lockedOrder) throw new PedidoNotFoundError('Pedido não encontrado');
+    if (lockedOrder.status !== 'CONCLUIDO') throw new PedidoValidationError('Somente pedidos concluídos podem ser cancelados');
+
+    const currentOrder = await tx.pedido.findUnique({ where: { id }, include: { itens: true, entrega: true } });
+    for (const item of currentOrder.itens) {
+      await tx.produto.update({ where: { id: item.produtoId }, data: { quantidadeEstoque: { increment: item.quantidade } } });
+    }
+    if (currentOrder.entrega) {
+      await tx.entrega.update({ where: { id: currentOrder.entrega.id }, data: { status: 'CANCELADO' } });
+    }
+
+    return tx.pedido.update({
+      where: { id },
+      data: { status: 'CANCELADO' },
+      include: {
+        itens: { include: { produto: true } },
+        cliente: true,
+        usuario: { select: { id: true, nome: true } },
+        entrega: true
+      }
+    });
+  });
+
+  return serializePedido(pedido);
+}
+
+module.exports = { FORMAS_PAGAMENTO, PedidoValidationError, PedidoNotFoundError, create, cancel };
