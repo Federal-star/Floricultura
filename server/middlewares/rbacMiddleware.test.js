@@ -59,3 +59,10 @@ test('usuário desativado recebe 401 mesmo com token válido', async () => {
   assert.equal(response.statusCode, 401);
   assert.equal(response.payload.success, false);
 });
+
+test('VENDEDOR pode acessar uma rota que permite registro de perdas', () => {
+  const request = { user: { role: 'VENDEDOR' } };
+  let nextCalled = false;
+  checkRole(['ADMIN', 'GERENTE', 'VENDEDOR'])(request, {}, () => { nextCalled = true; });
+  assert.equal(nextCalled, true);
+});

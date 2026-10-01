@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const productStock = document.getElementById('product-stock');
   const tabela = document.getElementById('tabelaPerdasBody');
   const historyFeedback = document.getElementById('history-feedback');
+  const historyPanel = document.getElementById('history-panel');
   const reasonFilter = document.getElementById('reason-filter');
   const productFilter = document.getElementById('product-filter');
   const previousPage = document.getElementById('previous-page');
@@ -20,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let products = [];
   let page = 1;
   let pagination = { totalPages: 1 };
+
+  if (authService.getUser()?.role === 'VENDEDOR') historyPanel.hidden = true;
 
   async function request(path, options = {}) {
     const response = await fetch(`/api/v1${path}`, {
@@ -97,5 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally { button.disabled = false; }
   }
 
-  Promise.all([carregarProdutosSelect(), carregarHistoricoPerdas()]).catch((error) => { historyFeedback.textContent = error.message; historyFeedback.className = 'feedback is-error'; });
+  const initialLoads = [carregarProdutosSelect()];
+  if (authService.getUser()?.role !== 'VENDEDOR') initialLoads.push(carregarHistoricoPerdas());
+  Promise.all(initialLoads).catch((error) => { historyFeedback.textContent = error.message; historyFeedback.className = 'feedback is-error'; });
 });
