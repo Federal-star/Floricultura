@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const env = require('../config/env');
 
 const PAYMENT_METHODS = ['DINHEIRO', 'PIX', 'CARTAO_CREDITO', 'CARTAO_DEBITO'];
 
@@ -18,22 +19,26 @@ function serializeMoney(value) {
   return value ? value.toString() : '0.00';
 }
 
+function classifyStock(quantity) {
+  if (quantity === 0) return 'ZERADO';
+  if (quantity <= env.estoqueMinimo) return 'BAIXO';
+  return 'NORMAL';
+}
+
 async function getKpis() {
-  const now = new Date();
-  const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const today = startOfToday();
   const month = startOfMonth();
 
   const [billing, salesToday, lossesThisMonth, criticalCount, criticalProducts] = await prisma.$transaction([
     prisma.pedido.aggregate({
-      where: { status: 'CONCLUIDO', createdAt: { gte: last24Hours } },
+      where: { status: 'CONCLUIDO', createdAt: { gte: today } },
       _sum: { valorTotal: true }
     }),
     prisma.pedido.count({ where: { status: 'CONCLUIDO', createdAt: { gte: today } } }),
     prisma.perda.aggregate({ where: { createdAt: { gte: month } }, _sum: { quantidade: true } }),
-    prisma.produto.count({ where: { ativo: true, quantidadeEstoque: { lte: 5 } } }),
+    prisma.produto.count({ where: { ativo: true, quantidadeEstoque: { lte: env.estoqueMinimo } } }),
     prisma.produto.findMany({
-      where: { ativo: true, quantidadeEstoque: { lte: 5 } },
+      where: { ativo: true, quantidadeEstoque: { lte: env.estoqueMinimo } },
       select: { id: true, nome: true, sku: true, categoria: true, quantidadeEstoque: true },
       orderBy: { quantidadeEstoque: 'asc' },
       take: 10
@@ -45,7 +50,9 @@ async function getKpis() {
     vendasHoje: salesToday,
     perdasNoMes: { quantidade: lossesThisMonth._sum.quantidade || 0 },
     produtosEmAlerta: criticalCount,
-    produtosCriticos: criticalProducts
+    produtosEsgotados: criticalProducts.filter((product) => classifyStock(product.quantidadeEstoque) === 'ZERADO').length,
+    produtosEstoqueBaixo: criticalProducts.filter((product) => classifyStock(product.quantidadeEstoque) === 'BAIXO').length,
+    produtosCriticos: criticalProducts.map((product) => ({ ...product, nivelEstoque: classifyStock(product.quantidadeEstoque) }))
   };
 }
 
@@ -69,4 +76,4 @@ async function getSalesByPayment() {
   });
 }
 
-module.exports = { getKpis, getSalesByPayment };
+module.exports = { classifyStock, getKpis, getSalesByPayment };
