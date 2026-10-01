@@ -1,5 +1,5 @@
 (function (window) {
-  const API_BASE_URL = 'http://localhost:3000/api/v1';
+  const API_BASE_URL = '/api/v1';
   const TOKEN_KEY = 'floricultura_token';
   const USER_KEY = 'floricultura_usuario';
 
@@ -44,4 +44,5 @@
     getUser,
     logout
   };
+  window.API_BASE_URL = API_BASE_URL;
 })(window);

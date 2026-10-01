@@ -1,8 +1,7 @@
 (function (window) {
-  const API_BASE_URL = 'http://localhost:3000/api/v1';
 
   async function request(path, options) {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetch(`${window.API_BASE_URL}${path}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',

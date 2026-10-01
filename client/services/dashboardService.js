@@ -1,8 +1,7 @@
 (function (window) {
-  const API_BASE_URL = 'http://localhost:3000/api/v1';
 
   async function request(path) {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetch(`${window.API_BASE_URL}${path}`, {
       headers: { Authorization: `Bearer ${authService.getToken()}` }
     });
     const payload = await response.json();
