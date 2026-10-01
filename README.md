@@ -11,7 +11,7 @@ O **FloraERP** é uma solução ERP completa desenvolvida para otimizar as opera
 - **RF02 - Pesquisa Global e Atalho Web:** Busca rápida no acervo do sistema (produtos, SKUs e clientes) com atalho para pesquisas externas na internet direto pelo PDV.
 - **RF03 - Categorização por Mais Populares:** Destaque para sub-classes e produtos mais vendidos no caixa.
 - **RF04 - Histórico de Vendas:** Consulta integrada de vendas realizadas diretamente na interface principal.
-- **RF05 - Disparo de Guia de Cuidados:** Envio automático do Guia de Cuidados Botânicos personalizado para o WhatsApp do cliente após a venda.
+- **RF05 - Disparo de Guia de Cuidados:** Abertura do WhatsApp com o Guia de Cuidados Botânicos personalizado pronto para revisão e confirmação do atendente após a venda.
 - **RF06 - Montagem de Kits/Combos:** Agrupamento de itens e insumos (ex: vaso + muda + fita) em um carrinho único.
 - **RF07 - Cadastro e Gestão de Clientes:** Cadastro completo para controle de preferências e histórico de compras.
 - **RF08 - Agendamento de Entregas:** Registro de agendamentos com validação cadastral (Nome, Telefone, CPF, Data e Horário da entrega).
@@ -71,6 +71,8 @@ Floricultura/
 └── README.md
 ```
 
+As pastas `client/components`, `client/hooks`, `server/models` e `server/migrations` são reservadas para futuras extrações; o código atual usa páginas vanilla e `server/prisma` como fonte oficial do banco.
+
 ---
 
 ## 🚀 Como Executar o Projeto Localmente
@@ -83,8 +85,8 @@ Floricultura/
 
 1. **Clonar o Repositório:**
    ```bash
-   git clone https://github.com/seu-usuario/flora-erp.git
-   cd flora-erp
+   git clone https://github.com/Federal-star/Floricultura.git
+   cd Floricultura
    ```
 
 2. **Instalar as Dependências:**
@@ -103,6 +105,7 @@ Floricultura/
    DATABASE_URL="postgresql://usuario:senha@localhost:5432/flora_erp?schema=public"
    PORT=3000
    JWT_SECRET="sua_chave_secreta_aqui"
+   ESTOQUE_MINIMO=5
    ```
    > Substitua `usuario` e `senha` pelas credenciais reais do seu PostgreSQL. Se estiverem incorretas, o Prisma retornará erro **P1000 (Authentication failed)**.
 
@@ -160,11 +163,11 @@ Revise o valor de `DATABASE_URL` no `.env` e valide usuário/senha/host/porta do
 - Cadastro Unificado de Clientes (**CAIOX-62 / RF07**).
 
 ### 🟢 Sprint 2: Gestão Avançada & Pós-venda
-- **CAIOX-63:** Vínculo de Cliente ao Pedido no PDV e Emissão de Comprovante/Recibo.
-- **CAIOX-64:** Agendamento e Gestão de Entregas com Validação Estrita (**RF08 / RN03**).
-- **CAIOX-65:** Ficha Botânica Expandida, Argumentos de Venda e Venda Casada (**RF01 / RF03**).
-- **CAIOX-66:** Disparo de Guia de Cuidados via WhatsApp pós-venda (**RF05**).
-- **CAIOX-67:** Pesquisa Global com Busca Web & Notificações de Estoque Zerado (**RF02 / RF11**).
+- **CAIOX-95:** Vínculo de cliente ao pedido no PDV e emissão de comprovante/recibo.
+- **CAIOX-96:** Agendamento e gestão de entregas com validação estrita (**RF08 / RN03**).
+- **CAIOX-97:** Ficha Botânica Expandida e Venda Casada (**RF01 / RF03**).
+- **CAIOX-98:** Guia de Cuidados via WhatsApp pós-venda, aberto para confirmação do atendente (**RF05**).
+- **CAIOX-99:** Pesquisa Global, busca web e notificações de estoque zerado/baixo (**RF02 / RF11**).
 
 ---
 
