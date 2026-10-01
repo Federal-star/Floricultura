@@ -115,6 +115,8 @@ model Pedido {
   itens           ItemPedido[]
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+
+  @@index([usuarioId])
 }
 
 model ItemPedido {
@@ -126,6 +128,9 @@ model ItemPedido {
   subtotal       Decimal  @db.Decimal(10, 2)
   pedido         Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
   produto        Produto  @relation(fields: [produtoId], references: [id])
+
+  @@index([pedidoId])
+  @@index([produtoId])
 }
 
 model Perda {
@@ -138,6 +143,10 @@ model Perda {
   produto     Produto     @relation(fields: [produtoId], references: [id])
   usuario     Usuario     @relation(fields: [usuarioId], references: [id])
   createdAt   DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([motivo])
+  @@index([produtoId])
 }
 
 model Entrega {
