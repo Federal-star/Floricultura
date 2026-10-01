@@ -60,6 +60,12 @@ async function detail(req, res, next) {
   } catch (error) { return next(error); }
 }
 
+async function stockAlerts(req, res, next) {
+  try {
+    return res.status(200).json({ success: true, data: await produtoService.stockAlerts() });
+  } catch (error) { return next(error); }
+}
+
 async function create(req, res, next) {
   try {
     const data = normalizePayload(req.body);
@@ -88,4 +94,4 @@ async function remove(req, res, next) {
   } catch (error) { return sendKnownError(res, error) || next(error); }
 }
 
-module.exports = { list, detail, create, update, remove };
+module.exports = { list, detail, stockAlerts, create, update, remove };

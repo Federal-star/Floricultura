@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const env = require('../config/env');
 
 const CATEGORIAS = ['PLANTA', 'VASO', 'INSUMO', 'ARRANJO', 'OUTROS'];
 const publicFields = {
@@ -97,4 +98,16 @@ async function deactivate(id) {
   return update(id, { ativo: false });
 }
 
-module.exports = { CATEGORIAS, isValidCategory, parseSuggestionIds, validateSuggestionIds, list, findById, create, update, deactivate };
+async function stockAlerts() {
+  const products = await prisma.produto.findMany({
+    where: { ativo: true, quantidadeEstoque: { lte: env.estoqueMinimo } },
+    select: { id: true, nome: true, sku: true, quantidadeEstoque: true },
+    orderBy: { quantidadeEstoque: 'asc' }
+  });
+  return {
+    zerados: products.filter((product) => product.quantidadeEstoque === 0),
+    baixos: products.filter((product) => product.quantidadeEstoque > 0)
+  };
+}
+
+module.exports = { CATEGORIAS, isValidCategory, parseSuggestionIds, validateSuggestionIds, list, findById, create, update, deactivate, stockAlerts };

@@ -6,6 +6,7 @@ const controller = require('../controllers/produtoController');
 
 router.use(authMiddleware);
 router.get('/', controller.list);
+router.get('/alertas-estoque', controller.stockAlerts);
 router.get('/:id', controller.detail);
 router.post('/', checkRole(['ADMIN', 'GERENTE']), controller.create);
 router.put('/:id', checkRole(['ADMIN', 'GERENTE']), controller.update);
