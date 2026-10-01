@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextPage = document.getElementById('next-page');
   const pageIndicator = document.getElementById('page-indicator');
   const labels = { DETERIORACAO: 'Deterioração', AVARIA: 'Avaria', PRAGA: 'Praga', VALIDADE: 'Validade', OUTROS: 'Outros' };
-  const escapeHtml = (value) => String(value || '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+  const { escapeHtml } = window.floriculturaUtils;
   const dateTime = (value) => new Date(value).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   const getToken = () => (window.authService && authService.getToken()) || localStorage.getItem('token');
   let products = [];

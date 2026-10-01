@@ -1,4 +1,5 @@
 (function () {
+  const { escapeHtml } = window.floriculturaUtils;
   const currentUser = authService.getUser();
   const isAdmin = currentUser && currentUser.role === 'ADMIN';
   const table = document.querySelector('#users-table');
@@ -28,10 +29,6 @@
         <td data-label="Status"><span class="status-badge">${user.ativo ? 'Ativo' : 'Inativo'}</span></td>
         <td class="row-actions">${isAdmin ? `<button class="text-button" data-edit="${user.id}" type="button">Editar</button>${user.ativo ? `<button class="text-button danger" data-remove="${user.id}" type="button">Inativar</button>` : ''}` : '<span class="muted-action">Somente leitura</span>'}</td>
       </tr>`).join('');
-  }
-
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
   }
 
   async function loadUsers() {

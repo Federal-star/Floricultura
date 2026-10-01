@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const getToken = () => (window.authService && authService.getToken()) || localStorage.getItem('token');
-const escapeHtml = (value) => String(value || '').replace(/[&<>\"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+const { escapeHtml } = window.floriculturaUtils;
 
 async function request(path, options = {}) {
   const response = await fetch(`/api/v1${path}`, {

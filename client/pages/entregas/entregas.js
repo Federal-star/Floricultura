@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const getToken = () => (window.authService && authService.getToken()) || localStorage.getItem('token');
-const escapeHtml = (value) => String(value || '').replace(/[&<>\"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+const { escapeHtml } = window.floriculturaUtils;
 const statusLabels = { PENDENTE: 'Pendente', EM_PREPARACAO: 'Em preparação', SAIU_PARA_ENTREGA: 'Saiu para entrega', ENTREGUE: 'Entregue', CANCELADO: 'Cancelado' };
 
 async function request(path, options = {}) {

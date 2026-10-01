@@ -29,7 +29,7 @@ async function getKpis() {
   const today = startOfToday();
   const month = startOfMonth();
 
-  const [billing, salesToday, lossesThisMonth, criticalCount, criticalProducts] = await prisma.$transaction([
+  const [billing, salesToday, lossesThisMonth, criticalCount, emptyCount, lowCount, criticalProducts] = await prisma.$transaction([
     prisma.pedido.aggregate({
       where: { status: 'CONCLUIDO', createdAt: { gte: today } },
       _sum: { valorTotal: true }
@@ -37,6 +37,8 @@ async function getKpis() {
     prisma.pedido.count({ where: { status: 'CONCLUIDO', createdAt: { gte: today } } }),
     prisma.perda.aggregate({ where: { createdAt: { gte: month } }, _sum: { quantidade: true } }),
     prisma.produto.count({ where: { ativo: true, quantidadeEstoque: { lte: env.estoqueMinimo } } }),
+    prisma.produto.count({ where: { ativo: true, quantidadeEstoque: 0 } }),
+    prisma.produto.count({ where: { ativo: true, quantidadeEstoque: { gt: 0, lte: env.estoqueMinimo } } }),
     prisma.produto.findMany({
       where: { ativo: true, quantidadeEstoque: { lte: env.estoqueMinimo } },
       select: { id: true, nome: true, sku: true, categoria: true, quantidadeEstoque: true },
@@ -50,8 +52,8 @@ async function getKpis() {
     vendasHoje: salesToday,
     perdasNoMes: { quantidade: lossesThisMonth._sum.quantidade || 0 },
     produtosEmAlerta: criticalCount,
-    produtosEsgotados: criticalProducts.filter((product) => classifyStock(product.quantidadeEstoque) === 'ZERADO').length,
-    produtosEstoqueBaixo: criticalProducts.filter((product) => classifyStock(product.quantidadeEstoque) === 'BAIXO').length,
+    produtosEsgotados: emptyCount,
+    produtosEstoqueBaixo: lowCount,
     produtosCriticos: criticalProducts.map((product) => ({ ...product, nivelEstoque: classifyStock(product.quantidadeEstoque) }))
   };
 }

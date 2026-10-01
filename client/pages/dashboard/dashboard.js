@@ -1,8 +1,7 @@
 (function () {
   const feedback = document.querySelector('#dashboard-feedback');
   const paymentLabels = { DINHEIRO: 'Dinheiro', PIX: 'PIX', CARTAO_CREDITO: 'Cartão de crédito', CARTAO_DEBITO: 'Cartão de débito' };
-  const currency = (value) => Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const escapeHtml = (value) => String(value || '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+  const { escapeHtml, formatCurrency: currency } = window.floriculturaUtils;
 
   function renderPayments(items) {
     const maximum = Math.max(...items.map((item) => Number(item.faturamento)), 1);
@@ -10,7 +9,7 @@
   }
 
   function renderCriticalProducts(products) {
-    document.querySelector('#critical-products').innerHTML = products.map((product) => `<tr><td data-label="Produto"><strong>${escapeHtml(product.nome)}</strong><span>${escapeHtml(product.categoria)}</span></td><td data-label="SKU">${escapeHtml(product.sku)}</td><td data-label="Saldo"><span class="critical-stock ${product.quantidadeEstoque === 0 ? 'is-empty' : ''}">${product.quantidadeEstoque} un.</span></td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Nenhum produto em nível crítico.</td></tr>';
+    document.querySelector('#critical-products').innerHTML = products.map((product) => `<tr><td data-label="Produto"><strong>${escapeHtml(product.nome)}</strong><span>${escapeHtml(product.categoria)}</span></td><td data-label="SKU">${escapeHtml(product.sku)}</td><td data-label="Saldo"><span class="critical-stock ${product.nivelEstoque === 'ZERADO' ? 'is-empty' : ''}">${product.nivelEstoque === 'ZERADO' ? 'Esgotado' : 'Estoque baixo'} · ${product.quantidadeEstoque} un.</span></td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Nenhum produto em nível crítico.</td></tr>';
   }
 
   async function loadDashboard() {
