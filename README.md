@@ -51,25 +51,23 @@ O **FloraERP** é uma solução ERP completa desenvolvida para otimizar as opera
 ## 📂 Estrutura do Projeto
 
 ```text
-flora-erp/
+Floricultura/
 ├── client/
-│   ├── css/
-│   │   └── style.css
-│   └── pages/
-│       ├── clientes/       # Cadastro e gestão de clientes (CAIOX-62)
-│       ├── dashboard/      # Métricas e alertas de estoque (RF11)
-│       ├── entregas/       # Agendamento e tracking de entregas (CAIOX-64)
-│       ├── pdv/            # Frente de caixa, Ficha Botânica e WhatsApp (CAIOX-63, 65, 66, 67)
-│       └── perdas/         # Registro de avarias e perdas (RF10)
+│   ├── pages/              # Telas do sistema (clientes, dashboard, entregas, login, pdv, perdas...)
+│   ├── services/           # Serviços HTTP do frontend
+│   └── styles/             # CSS por módulo
 ├── server/
-│   ├── controllers/        # Controladores de regra de negócio
-│   ├── middlewares/        # Middlewares de autenticação e validação
+│   ├── config/             # Configuração de ambiente e Prisma Client
+│   ├── controllers/        # Controladores da API
+│   ├── middlewares/        # Middlewares (auth, RBAC e erros)
 │   ├── prisma/
-│   │   ├── schema.prisma   # Schema do banco de dados
-│   │   └── seed.js         # Povoamento inicial de testes
-│   ├── routes/             # Definições de rotas da API REST
-│   ├── services/           # Serviços de alerta e regras transacionais
-│   └── server.js           # Ponto de entrada da aplicação backend
+│   │   ├── schema.prisma   # Schema do banco de dados (local oficial do Prisma neste projeto)
+│   │   ├── seed.js         # Seed inicial
+│   │   └── migrations/     # Histórico de migrações
+│   ├── routes/             # Rotas da API REST
+│   ├── services/           # Regras de negócio
+│   └── server.js           # Entry point do backend
+├── package.json
 └── README.md
 ```
 
@@ -94,31 +92,61 @@ flora-erp/
    npm install
    ```
 
-3. **Configurar as Variáveis de Ambiente (`.env`):**
+3. **Gerar o Prisma Client (obrigatório após instalar dependências):**
+   ```bash
+   npm run prisma:generate
+   ```
+
+4. **Configurar as Variáveis de Ambiente (`.env`):**
    Crie um arquivo `.env` na raiz do projeto contendo:
    ```env
    DATABASE_URL="postgresql://usuario:senha@localhost:5432/flora_erp?schema=public"
    PORT=3000
    JWT_SECRET="sua_chave_secreta_aqui"
    ```
+   > Substitua `usuario` e `senha` pelas credenciais reais do seu PostgreSQL. Se estiverem incorretas, o Prisma retornará erro **P1000 (Authentication failed)**.
 
-4. **Executar as Migrations do Banco:**
+5. **Executar as Migrations do Banco:**
    ```bash
-   npx prisma migrate dev
+   npm run migrate:dev
    ```
 
-5. **(Opcional) Executar o Seed para Dados Iniciais:**
+6. **(Opcional) Executar o Seed para Dados Iniciais:**
    ```bash
-   node server/prisma/seed.js
+   npm run seed
    ```
 
-6. **Iniciar o Servidor em Modo de Desenvolvimento:**
+7. **Iniciar o Servidor em Modo de Desenvolvimento:**
    ```bash
    npm run dev
    ```
 
-7. **Acessar a Aplicação:**
+8. **Acessar a Aplicação:**
    Abra o navegador e acesse: `http://localhost:3000/client/pages/pdv/index.html`
+
+---
+
+## 🧯 Solução de Problemas Comuns
+
+### Erro: `Could not find Prisma Schema`
+Esse projeto usa o schema em `server/prisma/schema.prisma` (não em `prisma/schema.prisma`).
+
+Use os scripts do projeto:
+
+```bash
+npm run prisma:generate
+npm run migrate:dev
+```
+
+### Erro: `@prisma/client did not initialize yet`
+Gere o client antes de iniciar o servidor:
+
+```bash
+npm run prisma:generate
+```
+
+### Erro Prisma `P1000: Authentication failed`
+Revise o valor de `DATABASE_URL` no `.env` e valide usuário/senha/host/porta do PostgreSQL.
 
 ---
 
