@@ -26,6 +26,19 @@ function isValidCategory(categoria) {
   return CATEGORIAS.includes(categoria);
 }
 
+function parseSuggestionIds(value) {
+  return String(value || '').split(',').map((id) => id.trim()).filter(Boolean);
+}
+
+async function validateSuggestionIds(value, productId) {
+  if (!value) return null;
+  const ids = parseSuggestionIds(value);
+  if (productId && ids.includes(productId)) return 'Um produto não pode sugerir a si mesmo';
+  const activeProducts = await prisma.produto.findMany({ where: { id: { in: ids }, ativo: true }, select: { id: true } });
+  if (activeProducts.length !== ids.length) return 'Todas as sugestões devem existir e estar ativas';
+  return null;
+}
+
 function serializeProduto(produto) {
   return {
     ...produto,
@@ -84,4 +97,4 @@ async function deactivate(id) {
   return update(id, { ativo: false });
 }
 
-module.exports = { CATEGORIAS, isValidCategory, list, findById, create, update, deactivate };
+module.exports = { CATEGORIAS, isValidCategory, parseSuggestionIds, validateSuggestionIds, list, findById, create, update, deactivate };

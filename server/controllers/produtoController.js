@@ -65,6 +65,8 @@ async function create(req, res, next) {
     const data = normalizePayload(req.body);
     const validationError = validate(data);
     if (validationError) return res.status(400).json({ success: false, error: validationError });
+    const suggestionsError = await produtoService.validateSuggestionIds(data.sugestoesIds);
+    if (suggestionsError) return res.status(400).json({ success: false, error: suggestionsError });
     return res.status(201).json({ success: true, data: await produtoService.create(data) });
   } catch (error) { return sendKnownError(res, error) || next(error); }
 }
@@ -74,6 +76,8 @@ async function update(req, res, next) {
     const data = normalizePayload(req.body, true);
     const validationError = validate(data, true);
     if (validationError) return res.status(400).json({ success: false, error: validationError });
+    const suggestionsError = await produtoService.validateSuggestionIds(data.sugestoesIds, req.params.id);
+    if (suggestionsError) return res.status(400).json({ success: false, error: suggestionsError });
     return res.status(200).json({ success: true, data: await produtoService.update(req.params.id, data) });
   } catch (error) { return sendKnownError(res, error) || next(error); }
 }
