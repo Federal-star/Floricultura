@@ -18,6 +18,8 @@
         <span class="session-label">Venda em andamento</span>
       </header>
 
+      <p id="stock-alert" class="feedback" role="status" hidden></p>
+      <div class="global-search"><label for="global-search-input">Pesquisa global</label><input id="global-search-input" type="search" minlength="2" placeholder="Produto ou cliente" autocomplete="off" /><button id="web-search" type="button">Pesquisar na internet</button><div id="global-results" class="global-results" hidden></div></div>
       <div class="pos-layout">
         <section class="product-browser" aria-labelledby="products-title">
           <div class="section-heading-row"><div><h2 id="products-title">Produtos disponíveis</h2><p id="products-count" class="section-meta"></p></div><div class="quick-search"><span aria-hidden="true">⌕</span><label class="sr-only" for="quick-search">Buscar produto</label><input id="quick-search" type="search" placeholder="Nome ou SKU" autocomplete="off" /></div></div>

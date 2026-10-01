@@ -20,6 +20,9 @@
   const whatsappButton = document.querySelector('#btnEnviarWhatsapp');
   const botanicalModal = document.querySelector('#modalFichaBotanica');
   const catalogFilters = document.querySelector('.catalog-filters');
+  const globalSearchInput = document.querySelector('#global-search-input');
+  const globalResults = document.querySelector('#global-results');
+  const stockAlert = document.querySelector('#stock-alert');
   const { escapeHtml, formatCurrency: currency, normalizeWhatsappPhone, buildCareGuideMessage } = window.floriculturaUtils;
   let products = [];
   let catalogProducts = [];
@@ -64,13 +67,14 @@
   }
 
   function stockLabel(quantity) {
-    if (quantity <= 5) return `<span class="stock-warning">${quantity} disponíveis</span>`;
+    if (quantity === 0) return '<span class="stock-warning">Esgotado</span>';
+    if (quantity <= 5) return `<span class="stock-warning">Estoque baixo: ${quantity}</span>`;
     return `<span>${quantity} disponíveis</span>`;
   }
 
   function renderProducts(filteredProducts) {
     productsCount.textContent = `${filteredProducts.length} ${filteredProducts.length === 1 ? 'item disponível' : 'itens disponíveis'}`;
-    productGrid.innerHTML = filteredProducts.map((product) => `<article class="product-card"><button class="product-details-button" data-details="${product.id}" type="button">Ficha botânica</button><div class="product-image">${product.imagemUrl ? `<img src="${escapeHtml(product.imagemUrl)}" alt="" />` : '<span aria-hidden="true">✿</span>'}</div><div class="product-card-body"><span class="product-category">${escapeHtml(product.categoria)}</span><h3>${escapeHtml(product.nome)}</h3><p class="product-sku">${escapeHtml(product.sku)}</p><div class="product-card-footer"><div><strong>${currency(product.precoVenda)}</strong>${stockLabel(product.quantidadeEstoque)}</div><button class="add-button" data-add="${product.id}" type="button" aria-label="Adicionar ${escapeHtml(product.nome)}">+</button></div></div></article>`).join('') || '<div class="empty-products">Nenhum produto disponível para seleção.</div>';
+    productGrid.innerHTML = filteredProducts.map((product) => `<article class="product-card"><button class="product-details-button" data-details="${product.id}" type="button">Ficha botânica</button><div class="product-image">${product.imagemUrl ? `<img src="${escapeHtml(product.imagemUrl)}" alt="" />` : '<span aria-hidden="true">✿</span>'}</div><div class="product-card-body"><span class="product-category">${escapeHtml(product.categoria)}</span><h3>${escapeHtml(product.nome)}</h3><p class="product-sku">${escapeHtml(product.sku)}</p><div class="product-card-footer"><div><strong>${currency(product.precoVenda)}</strong>${stockLabel(product.quantidadeEstoque)}</div><button class="add-button" data-add="${product.id}" type="button" aria-label="Adicionar ${escapeHtml(product.nome)}" ${product.quantidadeEstoque === 0 ? 'disabled' : ''}>+</button></div></div></article>`).join('') || '<div class="empty-products">Nenhum produto disponível para seleção.</div>';
   }
 
   function filterCatalogProducts() {
@@ -88,7 +92,7 @@
     document.querySelectorAll('[data-catalog-filter]').forEach((button) => button.classList.toggle('is-active', button.dataset.catalogFilter === filter));
     try {
       const result = await produtosService.list(1, 100, '', '', filter === 'POPULARES');
-      catalogProducts = result.items.filter((product) => product.quantidadeEstoque > 0 && product.ativo);
+      catalogProducts = result.items.filter((product) => product.ativo);
       reconcileCart();
       filterCatalogProducts();
     } catch (error) {
@@ -109,8 +113,8 @@
     document.querySelector('#fbArgumentos').textContent = product.argumentosVenda || 'Planta de alta durabilidade e excelente opção para presente.';
 
     const suggestedIds = (product.sugestoesIds || '').split(',').map((suggestionId) => suggestionId.trim()).filter(Boolean);
-    const suggested = suggestedIds.map((suggestionId) => catalogProducts.find((entry) => entry.id === suggestionId)).filter(Boolean);
-    const fallback = catalogProducts.filter((entry) => entry.id !== product.id && ['INSUMO', 'VASO'].includes(entry.categoria));
+    const suggested = suggestedIds.map((suggestionId) => catalogProducts.find((entry) => entry.id === suggestionId)).filter((entry) => entry && entry.quantidadeEstoque > 0);
+    const fallback = catalogProducts.filter((entry) => entry.id !== product.id && entry.quantidadeEstoque > 0 && ['INSUMO', 'VASO'].includes(entry.categoria));
     const suggestions = [...suggested, ...fallback.filter((entry) => !suggested.some((item) => item.id === entry.id))].slice(0, 3);
     document.querySelector('#containerVendaCasada').innerHTML = suggestions.map((suggestion) => `<article class="suggestion-card"><strong>${escapeHtml(suggestion.nome)}</strong><span>${currency(suggestion.precoVenda)}</span><button class="suggestion-add-button" data-suggestion-add="${suggestion.id}" type="button">Adicionar</button></article>`).join('') || '<p class="empty-suggestions">Nenhum item sugerido disponível.</p>';
     botanicalModal.hidden = false;
@@ -213,7 +217,7 @@
 
   function addToCart(id) {
     const product = catalogProducts.find((entry) => entry.id === id);
-    if (!product) return;
+    if (!product || product.quantidadeEstoque <= 0) return;
     const item = cart.find((entry) => entry.id === id);
     if (item && item.quantity >= product.quantidadeEstoque) {
       showFeedback(`Estoque máximo atingido para ${product.nome}.`, true);
@@ -251,6 +255,20 @@
     if (event.target.dataset.remove) { cart = cart.filter((item) => item.id !== event.target.dataset.remove); renderCart(); }
   });
   document.querySelector('#quick-search').addEventListener('input', filterProducts);
+  globalSearchInput.addEventListener('input', async () => {
+    const query = globalSearchInput.value.trim();
+    if (query.length < 2) { globalResults.hidden = true; return; }
+    try {
+      const response = await fetch(`${window.API_BASE_URL}/busca?q=${encodeURIComponent(query)}`, { headers: { Authorization: `Bearer ${authService.getToken()}` } });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) throw new Error(payload.error || 'Não foi possível pesquisar.');
+      const data = payload.data;
+      globalResults.innerHTML = `<strong>Produtos</strong>${data.produtos.map((item) => `<button type="button" data-global-product="${escapeHtml(item.id)}">${escapeHtml(item.nome)} · ${escapeHtml(item.sku)}</button>`).join('') || '<span>Nenhum produto encontrado.</span>'}<strong>Clientes</strong>${data.clientes.map((item) => `<span>${escapeHtml(item.nome)}${item.telefone ? ` · ${escapeHtml(item.telefone)}` : ''}</span>`).join('') || '<span>Nenhum cliente encontrado.</span>'}`;
+      globalResults.hidden = false;
+    } catch (error) { showFeedback(error.message, true); }
+  });
+  globalResults.addEventListener('click', (event) => { if (event.target.dataset.globalProduct) { globalSearchInput.value = ''; globalResults.hidden = true; openBotanicalSheet(event.target.dataset.globalProduct); } });
+  document.querySelector('#web-search').addEventListener('click', () => { const query = globalSearchInput.value.trim(); if (query) window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank', 'noopener,noreferrer'); });
   discountInput.addEventListener('input', () => { discount = Number(discountInput.value) || 0; renderCart(); });
   clearCartButton.addEventListener('click', () => { cart = []; renderCart(); });
   continueButton.addEventListener('click', openCheckout);
@@ -306,11 +324,19 @@
   async function initialize() {
     try {
       const result = await produtosService.list(1, 100, '', '');
-      catalogProducts = result.items.filter((product) => product.quantidadeEstoque > 0 && product.ativo);
+      catalogProducts = result.items.filter((product) => product.ativo);
       products = catalogProducts;
       reconcileCart();
       filterCatalogProducts();
       renderCart();
+      const alertResponse = await fetch(`${window.API_BASE_URL}/produtos/alertas-estoque`, { headers: { Authorization: `Bearer ${authService.getToken()}` } });
+      const alertPayload = await alertResponse.json();
+      if (alertResponse.ok && alertPayload.success) {
+        const zeroed = alertPayload.data.zerados.length;
+        const low = alertPayload.data.baixos.length;
+        stockAlert.textContent = `${zeroed} esgotado(s) e ${low} produto(s) com estoque baixo.`;
+        stockAlert.hidden = zeroed + low === 0;
+      }
     } catch (error) {
       productFeedback.textContent = error.message;
       productFeedback.classList.add('is-error');
