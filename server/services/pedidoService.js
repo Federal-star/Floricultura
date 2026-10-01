@@ -33,13 +33,21 @@ function normalizeItems(items) {
     .sort((left, right) => left.produtoId.localeCompare(right.produtoId));
 }
 
+function removeSensitiveFields(value) {
+  if (Array.isArray(value)) return value.map(removeSensitiveFields);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value).filter(([key]) => key !== 'senha').map(([key, entry]) => [key, removeSensitiveFields(entry)]));
+}
+
 function serializePedido(pedido) {
+  const safePedido = removeSensitiveFields(pedido);
   return {
-    ...pedido,
-    valorTotal: pedido.valorTotal.toString(),
-    desconto: pedido.desconto.toString(),
-    troco: pedido.troco.toString(),
-    itens: pedido.itens.map((item) => ({
+    ...safePedido,
+    valorTotal: safePedido.valorTotal.toString(),
+    desconto: safePedido.desconto.toString(),
+    troco: safePedido.troco.toString(),
+    usuario: safePedido.usuario ? { id: safePedido.usuario.id, nome: safePedido.usuario.nome } : null,
+    itens: safePedido.itens.map((item) => ({
       ...item,
       precoUnitario: item.precoUnitario.toString(),
       subtotal: item.subtotal.toString(),
@@ -149,4 +157,4 @@ async function cancel(id) {
   return serializePedido(pedido);
 }
 
-module.exports = { FORMAS_PAGAMENTO, PedidoValidationError, PedidoNotFoundError, create, cancel };
+module.exports = { FORMAS_PAGAMENTO, PedidoValidationError, PedidoNotFoundError, serializePedido, create, cancel };

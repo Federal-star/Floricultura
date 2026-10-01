@@ -4,6 +4,19 @@ const assert = require('node:assert/strict');
 const prisma = require('../config/prisma');
 const pedidoService = require('./pedidoService');
 
+test('serialização de pedido não expõe senha em nenhum nível', () => {
+  const serialized = pedidoService.serializePedido({
+    id: 'pedido-1',
+    valorTotal: '10.00',
+    desconto: '0.00',
+    troco: '0.00',
+    usuario: { id: 'u1', nome: 'Admin', senha: 'hash-secreto' },
+    itens: [{ precoUnitario: '10.00', subtotal: '10.00', produto: { nome: 'Rosa', senha: 'não deveria existir' } }]
+  });
+  const serializedText = JSON.stringify(serialized);
+  assert.doesNotMatch(serializedText, /senha/);
+});
+
 test('cancelar pedido devolve estoque e cancela entrega; segunda tentativa falha', async () => {
   const originalTransaction = prisma.$transaction;
   const state = { status: 'CONCLUIDO', estoque: 2, entrega: 'PENDENTE' };
